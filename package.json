@@ -11,6 +11,12 @@
     "lint:fix": "eslint . --fix",
     "prepare": "husky"
   },
+  "lint-staged": {
+    "*.ts": [
+        "npm run lint:fix",
+        "npm run format:fix"
+    ]
+},
   "author": "Abhijit",
   "license": "ISC",
   "devDependencies": {
