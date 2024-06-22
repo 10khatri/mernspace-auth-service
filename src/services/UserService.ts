@@ -12,6 +12,7 @@ export class UserService {
                 lastName,
                 email,
                 password,
+                role: "customer",
             });
             return newUser;
         } catch (error) {

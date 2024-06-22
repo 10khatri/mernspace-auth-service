@@ -2,9 +2,8 @@ import request from "supertest";
 import app from "../../src/app";
 import { User } from "../../src/entity/User";
 import { DataSource } from "typeorm";
-import { truncateTable } from "../utils";
 import { AppDataSource } from "../../src/config/data-source";
-
+import { Roles } from "../../src/constants";
 describe("POST /auth/register", () => {
     let connection: DataSource;
 
@@ -13,7 +12,8 @@ describe("POST /auth/register", () => {
     });
 
     beforeEach(async () => {
-        await truncateTable(connection);
+        await connection.dropDatabase();
+        await connection.synchronize();
     });
 
     afterAll(async () => {
@@ -88,6 +88,20 @@ describe("POST /auth/register", () => {
             expect((response.body as Record<string, string>).id).toBe(
                 users[0].id,
             );
+        });
+        it("should assign a customer role", async () => {
+            const userData = {
+                firstName: "John",
+                lastName: "Doe",
+                email: "test123@gmail.com",
+                password: "secret",
+                role: Roles.CUSTOMER,
+            };
+            await request(app).post("/auth/register").send(userData);
+            const userRepository = connection.getRepository(User);
+            const users = await userRepository.find();
+            expect(users[0]).toHaveProperty("role");
+            expect(users[0].role).toBe(Roles.CUSTOMER);
         });
     });
     describe("given missing fields", () => {});
