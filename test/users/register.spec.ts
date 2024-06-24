@@ -69,7 +69,6 @@ describe("POST /auth/register", () => {
             expect(users[0].firstName).toBe(userData.firstName);
             expect(users[0].lastName).toBe(userData.lastName);
             expect(users[0].email).toBe(userData.email);
-            expect(users[0].password).toBe(userData.password);
         });
 
         it("should return the user id in the response", async () => {
@@ -89,6 +88,7 @@ describe("POST /auth/register", () => {
                 users[0].id,
             );
         });
+
         it("should assign a customer role", async () => {
             const userData = {
                 firstName: "John",
@@ -102,6 +102,21 @@ describe("POST /auth/register", () => {
             const users = await userRepository.find();
             expect(users[0]).toHaveProperty("role");
             expect(users[0].role).toBe(Roles.CUSTOMER);
+        });
+
+        it("should store the hash password in the database", async () => {
+            const userData = {
+                firstName: "John",
+                lastName: "Doe",
+                email: "test123@gmail.com",
+                password: "secret",
+            };
+            await request(app).post("/auth/register").send(userData);
+            const userRepository = connection.getRepository(User);
+            const users = await userRepository.find();
+            expect(users[0].password).not.toBe(userData.password);
+            expect(users[0].password).toHaveLength(60);
+            expect(users[0].password).toMatch(/^\$2[a|b]\$\d+\$/);
         });
     });
     describe("given missing fields", () => {});
