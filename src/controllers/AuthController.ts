@@ -38,6 +38,22 @@ export class AuthController {
                 password,
             });
             this.logger.info(`User with id ${user.id} created`);
+
+            const accessToken = "eqwerqwq";
+            const refreshToken = "dasdasda";
+            res.cookie("accessToken", accessToken, {
+                domain: "localhost",
+                sameSite: "strict",
+                maxAge: 1000 * 60 * 60, //1 hr
+                httpOnly: true,
+            });
+            res.cookie("refreshToken", refreshToken, {
+                domain: "localhost",
+                sameSite: "strict",
+                maxAge: 1000 * 60 * 60 * 24 * 365, //1 hr
+                httpOnly: true,
+            });
+
             res.status(201).json({ id: user.id });
         } catch (error) {
             next(error);
