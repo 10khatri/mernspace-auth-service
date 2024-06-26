@@ -1,9 +1,12 @@
+import fs from "fs";
+import path from "path";
 import { NextFunction, Response } from "express";
 import { RegisterUserRequest } from "../types";
 import { UserService } from "../services/UserService";
 import { Logger } from "winston";
-// import createHttpError from "http-errors";
 import { validationResult } from "express-validator";
+import { sign, JwtPayload } from "jsonwebtoken";
+import createHttpError from "http-errors";
 
 export class AuthController {
     constructor(
@@ -37,9 +40,31 @@ export class AuthController {
                 email,
                 password,
             });
-            this.logger.info(`User with id ${user.id} created`);
 
-            const accessToken = "eqwerqwq";
+            this.logger.info(`User with id ${user.id} created`);
+            let privateKey: Buffer;
+            try {
+                privateKey = fs.readFileSync(
+                    path.join(__dirname, "../../certs/private.pem"),
+                );
+            } catch (err) {
+                const error = createHttpError(
+                    500,
+                    "error while reading private key",
+                );
+                next(error);
+                return;
+            }
+
+            const payload: JwtPayload = {
+                sub: String(user.id),
+                role: user.role,
+            };
+            const accessToken = sign(payload, privateKey, {
+                expiresIn: "1h",
+                algorithm: "RS256",
+                issuer: "auth-service",
+            });
             const refreshToken = "dasdasda";
             res.cookie("accessToken", accessToken, {
                 domain: "localhost",
