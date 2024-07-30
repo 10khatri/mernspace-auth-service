@@ -163,10 +163,12 @@ export class AuthController {
     }
     async self(req: AuthRequest, res: Response) {
         // token req.auth.id
+
         const user = await this.userService.findById(Number(req.auth.sub));
 
         res.json({ ...user, password: undefined });
     }
+
     async refresh(req: AuthRequest, res: Response, next: NextFunction) {
         const payload: JwtPayload = {
             sub: req.auth.sub,
@@ -210,6 +212,22 @@ export class AuthController {
             next(error);
             return;
         }
-        res.json({});
+    }
+
+    async logout(req: AuthRequest, res: Response, next: NextFunction) {
+        try {
+            await this.tokenService.deleteRefreshTokenById(Number(req.auth.id));
+            this.logger.info("Refresh token has been deleted", {
+                id: req.auth.id,
+            });
+            this.logger.info("User has been logged out", { id: req.auth.sub });
+
+            res.clearCookie("accessToken");
+            res.clearCookie("refreshToken");
+            res.json({});
+        } catch (err) {
+            next(err);
+            return;
+        }
     }
 }
